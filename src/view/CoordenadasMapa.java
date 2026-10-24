@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import model.ModelAPI;
+
 /**
  * Posição, em pixels da imagem imagens/tabuleiro.jpg (2905 x 2919), de cada
  * parada e de cada lugar onde o Khan pode ficar.
  *
  * Os nomes são os mesmos devolvidos pela ModelAPI (getParadas() e
- * getDestinosDoKhan()). As coordenadas ficam na View porque dependem da
+ * getLocaisDoKhan()). As coordenadas ficam na View porque dependem da
  * imagem; o Model só conhece os nomes e as rotas. O PainelTabuleiro converte
  * esses pontos para a escala em que a imagem está sendo desenhada.
  */
@@ -23,9 +25,6 @@ public final class CoordenadasMapa {
 
 	/** Raio aproximado do círculo de uma parada simples na imagem. */
 	public static final int RAIO_PARADA = 55;
-
-	/** Nome usado pelo Model para a área de melhorias (5º lugar do Khan). */
-	public static final String AREA_MELHORIAS = "AREA_MELHORIAS";
 
 	private static final Map<String, Point> PARADAS = new HashMap<>();
 	private static final Map<String, Point> LOCAIS_DO_KHAN = new HashMap<>();
@@ -77,7 +76,7 @@ public final class CoordenadasMapa {
 		LOCAIS_DO_KHAN.put("Khan do Nordeste", new Point(1743, 902));
 		LOCAIS_DO_KHAN.put("Khan do Sudoeste", new Point(798, 1719));
 		LOCAIS_DO_KHAN.put("Khan do Sudeste", new Point(2138, 2051));
-		LOCAIS_DO_KHAN.put(AREA_MELHORIAS, new Point(111, 2802));
+		LOCAIS_DO_KHAN.put(ModelAPI.AREA_MELHORIAS, new Point(111, 2802));
 	}
 
 	private CoordenadasMapa() {
