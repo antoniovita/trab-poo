@@ -14,8 +14,8 @@ import org.junit.Test;
 
 /**
  * Testes estruturais do mapa montado por MapaOficial. Eles verificam
- * o que o manual garante (contagens, conectividade, simetria), e continuarão
- * valendo quando o grupo corrigir as rotas a partir do tabuleiro físico.
+ * o que o manual e o tabuleiro oficial garantem (contagens, conectividade,
+ * simetria).
  */
 public class MapaOficialTest {
 

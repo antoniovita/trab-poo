@@ -88,20 +88,20 @@ public class ModelAPITest {
 	/**
 	 * Objetivo: expor a geografia necessária para desenhar o mapa.
 	 * Entrada: consultas sobre Karakorum, Kiev e nomes inexistentes.
-	 * Saída esperada: 39 paradas, 9 cidades, cinco rotas da capital e valores nulos para nomes inválidos.
+	 * Saída esperada: 34 paradas, 9 cidades, quatro rotas da capital e valores nulos para nomes inválidos.
 	 */
 	@Test(timeout = TEMPO_LIMITE)
 	public void mapaEhConsultavelPorNomes() {
-		assertEquals("Paradas do mapa oficial", 39, api.getParadas().size());
+		assertEquals("Paradas do mapa oficial", 34, api.getParadas().size());
 		assertEquals("Cidades do mapa oficial", 9, api.getCidades().size());
 		assertEquals("Tipo da capital", "KARAKORUM", api.getTipoParada("Karakorum"));
 		assertNull("Karakorum não pertence a região", api.getRegiaoParada("Karakorum"));
 		assertEquals("Tipo de parada de conselheiro", "DUPLA", api.getTipoParada("Conselheiro Norte"));
-		assertEquals("Região de Kiev Norte", "RUSSIA", api.getRegiaoParada("Kiev Norte"));
+		assertEquals("Região de Kiev Nordeste", "RUSSIA", api.getRegiaoParada("Kiev Nordeste"));
 		assertEquals("Rotas que saem da capital",
-				Arrays.asList("Cabul Norte", "Moscou Sul", "Pequim Oeste", "Samarcanda Leste", "Sarai Sul"),
+				Arrays.asList("Conselheiro Nordeste", "Pequim Norte", "Samarcanda Sudeste", "Sarai Sudoeste"),
 				api.getVizinhas("Karakorum"));
-		assertEquals("Anel de Kiev", Arrays.asList("Kiev Norte", "Kiev Oeste", "Kiev Sul"), api.getParadasDaCidade("Kiev"));
+		assertEquals("Anel de Kiev", Arrays.asList("Kiev Nordeste", "Kiev Sudeste", "Kiev Sudoeste"), api.getParadasDaCidade("Kiev"));
 		assertNull("Parada inexistente não tem tipo", api.getTipoParada("Atlântida"));
 		assertTrue("Parada inexistente não tem vizinhas", api.getVizinhas("Atlântida").isEmpty());
 	}
@@ -115,7 +115,7 @@ public class ModelAPITest {
 	public void semColunaAtivadaNaoHaMovimento() {
 		assertEquals("Sem coluna ativada não há cavalos", 0, api.getCavalosRestantes());
 		assertTrue("Sem cavalos não há destinos", api.getDestinosPossiveis().isEmpty());
-		assertFalse("Movimento sem cavalos deve ser recusado", api.moverPara("Moscou Sul"));
+		assertFalse("Movimento sem cavalos deve ser recusado", api.moverPara("Sarai Sudoeste"));
 		assertEquals("O peão deve continuar na capital", "Karakorum", api.getPosicaoPeao(0, 0));
 	}
 
@@ -130,10 +130,10 @@ public class ModelAPITest {
 		assertEquals("Coluna ativada", "VERMELHA", api.getColunaAtivada());
 		assertEquals("A vermelha de Ogedei dá dois cavalos", 2, api.getCavalosRestantes());
 		List<String> destinos = api.getDestinosPossiveis();
-		assertTrue("Vizinha da capital é destino", destinos.contains("Moscou Sul"));
-		assertTrue("Parada a dois passos é destino", destinos.contains("Moscou Leste"));
+		assertTrue("Vizinha da capital é destino", destinos.contains("Sarai Sudoeste"));
+		assertTrue("Parada a dois passos é destino", destinos.contains("Moscou Nordeste"));
 		assertFalse("A origem não é destino", destinos.contains("Karakorum"));
-		assertFalse("Parada a três passos não é destino", destinos.contains("Kiev Norte"));
+		assertFalse("Parada a três passos não é destino", destinos.contains("Moscou Noroeste"));
 		assertFalse("Só uma coluna por turno", api.ativarColuna("VERDE"));
 		assertEquals("A ativação notifica uma vez", 1, contador.notificacoes);
 		assertSame("O observado notificado é a fachada", api, contador.ultimo);
@@ -141,19 +141,19 @@ public class ModelAPITest {
 
 	/**
 	 * Objetivo: mover o peão gastando cavalos e notificar a View.
-	 * Entrada: vermelha (2 cavalos); mover para Moscou Sul; depois tentar Kiev Norte com 1 cavalo.
-	 * Saída esperada: peão em Moscou Sul com 1 cavalo; segundo movimento recusado sem alterar nada.
+	 * Entrada: vermelha (2 cavalos); mover para Sarai Sudoeste; depois tentar Moscou Noroeste com 1 cavalo.
+	 * Saída esperada: peão em Sarai Sudoeste com 1 cavalo; segundo movimento recusado sem alterar nada.
 	 */
 	@Test(timeout = TEMPO_LIMITE)
 	public void moverGastaCavalosENotifica() {
 		api.ativarColuna("VERMELHA");
-		assertTrue("Movimento para vizinha deve ser aceito", api.moverPara("Moscou Sul"));
-		assertEquals("Nova posição do peão", "Moscou Sul", api.getPosicaoPeao(0, 0));
+		assertTrue("Movimento para vizinha deve ser aceito", api.moverPara("Sarai Sudoeste"));
+		assertEquals("Nova posição do peão", "Sarai Sudoeste", api.getPosicaoPeao(0, 0));
 		assertEquals("Um cavalo gasto", 1, api.getCavalosRestantes());
 		assertEquals("Ativação e movimento notificam", 2, contador.notificacoes);
 		assertTrue("Com 1 cavalo é possível voltar à capital", api.getDestinosPossiveis().contains("Karakorum"));
-		assertFalse("Destino distante deve ser recusado", api.moverPara("Kiev Norte"));
-		assertEquals("Movimento recusado preserva a posição", "Moscou Sul", api.getPosicaoPeao(0, 0));
+		assertFalse("Destino distante deve ser recusado", api.moverPara("Moscou Noroeste"));
+		assertEquals("Movimento recusado preserva a posição", "Sarai Sudoeste", api.getPosicaoPeao(0, 0));
 		assertEquals("Movimento recusado preserva os cavalos", 1, api.getCavalosRestantes());
 		assertEquals("Movimento recusado não notifica", 2, contador.notificacoes);
 	}
@@ -170,7 +170,7 @@ public class ModelAPITest {
 		assertFalse("Não pode terminar com o Khan pendente", api.podeTerminarTurno());
 		assertFalse("Terminar deve ser recusado", api.terminarTurno());
 		assertEquals("Quatro províncias do Khan e a área de melhorias", 5, api.getDestinosDoKhan().size());
-		assertFalse("Província comum não recebe o Khan", api.moverKhan("Estepe de Kiev"));
+		assertFalse("Província comum não recebe o Khan", api.moverKhan("Estepe de Moscou"));
 		assertTrue("Província do Khan deve ser aceita", api.moverKhan("Khan do Noroeste"));
 		assertEquals("Posição do Khan", "Khan do Noroeste", api.getPosicaoKhan());
 		assertTrue("Agora o turno pode terminar", api.terminarTurno());
@@ -180,7 +180,7 @@ public class ModelAPITest {
 
 	/**
 	 * Objetivo: deixar Altani escolher o peão até a primeira ação de posição.
-	 * Entrada: Altani escolhe o peão 1, ativa a verde e vai a Moscou Sul.
+	 * Entrada: Altani escolhe o peão 1, ativa a verde e vai a Sarai Sudoeste.
 	 * Saída esperada: só o peão 1 se move e a escolha fica bloqueada depois do movimento.
 	 */
 	@Test(timeout = TEMPO_LIMITE)
@@ -191,27 +191,27 @@ public class ModelAPITest {
 		assertTrue("Escolha do segundo peão", api.escolherPeao(1));
 		assertEquals("Peão ativo", 1, api.getPeaoAtivo());
 		api.ativarColuna("VERDE");
-		assertTrue("O peão escolhido deve se mover", api.moverPara("Moscou Sul"));
-		assertEquals("O segundo peão foi para Moscou Sul", "Moscou Sul", api.getPosicaoPeao(0, 1));
+		assertTrue("O peão escolhido deve se mover", api.moverPara("Sarai Sudoeste"));
+		assertEquals("O segundo peão foi para Sarai Sudoeste", "Sarai Sudoeste", api.getPosicaoPeao(0, 1));
 		assertEquals("O primeiro peão ficou na capital", "Karakorum", api.getPosicaoPeao(0, 0));
 		assertFalse("Depois de mover não se troca de peão", api.escolherPeao(0));
 	}
 
 	/**
 	 * Objetivo: não oferecer como destino uma parada simples ocupada por outro jogador.
-	 * Entrada: Ana termina em Moscou Sul; Bia (Chagatai) ativa a verde, com 1 cavalo.
-	 * Saída esperada: Moscou Sul fora dos destinos de Bia; Sarai Sul disponível.
+	 * Entrada: Ana termina em Sarai Sudoeste; Bia (Chagatai) ativa a verde, com 1 cavalo.
+	 * Saída esperada: Sarai Sudoeste fora dos destinos de Bia; Samarcanda Sudeste disponível.
 	 */
 	@Test(timeout = TEMPO_LIMITE)
 	public void paradaSimplesOcupadaNaoEhDestino() {
 		api.ativarColuna("VERMELHA");
-		api.moverPara("Moscou Sul");
+		api.moverPara("Sarai Sudoeste");
 		assertTrue("Ana termina o turno", api.terminarTurno());
 		assertTrue("Bia ativa a verde", api.ativarColuna("VERDE"));
 		List<String> destinos = api.getDestinosPossiveis();
-		assertFalse("Parada simples ocupada não é destino", destinos.contains("Moscou Sul"));
-		assertTrue("Parada livre vizinha é destino", destinos.contains("Sarai Sul"));
-		assertFalse("Mover para a parada ocupada deve ser recusado", api.moverPara("Moscou Sul"));
+		assertFalse("Parada simples ocupada não é destino", destinos.contains("Sarai Sudoeste"));
+		assertTrue("Parada livre vizinha é destino", destinos.contains("Samarcanda Sudeste"));
+		assertFalse("Mover para a parada ocupada deve ser recusado", api.moverPara("Sarai Sudoeste"));
 	}
 
 	/**
@@ -237,7 +237,7 @@ public class ModelAPITest {
 		assertEquals("Quatro províncias e a área de melhorias", 5, locais.size());
 		assertEquals("A área de melhorias vem por último", ModelAPI.AREA_MELHORIAS, locais.get(4));
 		assertTrue("Província do Khan é um local do Khan", locais.contains("Khan do Noroeste"));
-		assertFalse("Província comum não é local do Khan", locais.contains("Estepe de Kiev"));
+		assertFalse("Província comum não é local do Khan", locais.contains("Estepe de Moscou"));
 		assertTrue("Sem Khan pendente não há destinos", api.getDestinosDoKhan().isEmpty());
 	}
 
