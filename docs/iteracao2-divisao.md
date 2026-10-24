@@ -18,7 +18,8 @@ Controller falam com o Model **somente** pela fachada pública `model.ModelAPI`.
 - **Clique recusado não faz nada**: não mostra mensagem e não troca o jogador da vez.
 - **Evitar caixas de diálogo** (`JOptionPane`): troca de turno e fim da partida
   aparecem no `PainelTurno`.
-- **Tabuleiro e peões com `drawImage()`** do `Graphics2D`, a partir das imagens do EAD.
+- **Imagens do EAD com `drawImage()`** do `Graphics2D` (o `tabuleiro.jpg`, em `imagens/`).
+  O zip não traz imagem de peão; os peões e o Khan são desenhados com formas do `Graphics2D`.
 - **Janela de no máximo 1400 x 1050.**
 
 ## Divisão do trabalho
@@ -28,7 +29,7 @@ Cada parte cria arquivos próprios, então os commits não entram em conflito.
 | Parte | Responsável | Arquivos | Depende de |
 |---|---|---|---|
 | 1. Fachada, Observer e painel do turno | @JogzDev | `model/ModelAPI`, `model/ObservadorIF`, `model/ObservadoIF`, esqueleto de `controller/Controlador`, `view/PainelTurno`, `view/CoresJogador`, `test/model/ModelAPITest` | nada (já entregue) |
-| 2. Tabuleiro gráfico | @phmucelin | `view/PainelTabuleiro`, `view/CoordenadasMapa` | só do contrato abaixo |
+| 2. Tabuleiro gráfico | @phmucelin | `view/PainelTabuleiro`, `view/CoordenadasMapa`, `imagens/tabuleiro.jpg`, correção do `model/MapaOficial` | só do contrato abaixo |
 | 3. Janelas e fluxo do jogo | a definir | `controller/Main`, `view/JanelaInicial`, `view/JanelaJogo`, corpo dos métodos de `Controlador`, README da 2ª iteração | só do contrato abaixo |
 
 A Parte 1 já está pronta e testada (159 testes, zero falhas). Depois que ela
@@ -55,14 +56,15 @@ não usa nada da outra além de um construtor (`new PainelTabuleiro()`).
   construtor público sem parâmetros que chama `Controlador.getInstance().registra(this)`.
 - Sobrescrever `getPreferredSize()` e `paintComponent(Graphics g)`. Com o
   `PainelTurno` ao lado (260 px), o tabuleiro tem no máximo 1140 x 1050.
-- Desenhar o tabuleiro e os peões com `drawImage()`, a partir das imagens do EAD
-  (o `tabuleiro.jpg` do zip). `CoresJogador` serve para os destaques: peão ativo,
-  destinos possíveis e locais do Khan.
+- Desenhar o tabuleiro com `drawImage()`, a partir de `imagens/tabuleiro.jpg`. Os
+  peões e o Khan, que não têm imagem no zip, são formas do `Graphics2D`, com as
+  cores de `CoresJogador`, que também servem para os destaques.
 - `CoordenadasMapa`: um `Map<String, Point>` com a posição, sobre a imagem, de
   cada parada (`ModelAPI.getParadas()`) e de cada local do Khan
   (`getLocaisDoKhan()`: as províncias do Khan e `ModelAPI.AREA_MELHORIAS`).
-- O `MapaOficial` atual não bate com o `tabuleiro.jpg`; ele é corrigido nesta parte,
-  junto com os testes do `ModelAPITest` que dependem de nomes do mapa.
+- O `MapaOficial` foi corrigido nesta parte para bater com o `tabuleiro.jpg`: 34
+  paradas (11 por região, com 2 duplas, mais Karakorum) e 12 províncias. Os testes do
+  `ModelAPITest` passaram a usar os nomes do mapa novo.
 - Destacar os destinos possíveis (`getDestinosPossiveis`), o peão ativo
   (`getPeaoAtivo`) e, quando `isKhanPendente()`, os destinos do Khan (`getDestinosDoKhan`).
 - Um `MouseListener` (classe nomeada, sem lambda) trata o clique:
