@@ -42,7 +42,7 @@ iteração. Todas as coleções usam o framework de coleções (`HashMap`,
 | `Herdeiro` (enum) | Os 5 herdeiros, habilidade e as 4 colunas de ações transcritas das cartelas. |
 | `Jogador` | Cor, herdeiro, peões, estoque de 12 yurts, 4 peças de ativação, tributos e votos. |
 | `Tabuleiro` | `HashMap<String, Parada>` + `HashMap<Parada, Set<Parada>>` (rotas) + cidades, províncias, posição dos peões; consultas de vizinhança, yurts, maioria por região e movimento. |
-| `MapaOficial` | Monta o `Tabuleiro` com a geografia do jogo (**rotas a validar**, ver abaixo). |
+| `MapaOficial` | Monta o `Tabuleiro` com a geografia do tabuleiro oficial (ver abaixo). |
 
 ### Correspondência com a divisão original (termos de War → Herdeiros de Khan)
 
@@ -67,15 +67,15 @@ usa as consultas do `Tabuleiro` (`saoVizinhas`, `podeTerminarMovimentoEm`,
 são das outras partes do trabalho e se encaixam em `Jogador`/`Cidade` sem
 alterar o que existe.
 
-## ⚠️ Mapa: o que precisa ser conferido com o tabuleiro físico
+## Mapa
 
-`MapaOficial` foi transcrito do manual escaneado (pp. 4 a 5), onde a rede de rotas
-aparece pequena. Está **confirmado**: 3 regiões; 9 cidades (3 por região);
-7 conselheiros (6 paradas duplas + Karakorum); 4 províncias do Khan.
-É **aproximação**: quantas paradas há em cada anel de cidade, quais rotas ligam
-os anéis, e o tributo/posição de cada província. Para corrigir, edite apenas
-as listas em `MapaOficial.java` (uma linha por parada/rota/província); os
-testes de `MapaOficialTest` continuam valendo. Veja `docs/mapa-manual.jpg`.
+`MapaOficial` foi transcrito da imagem oficial do tabuleiro (`imagens/tabuleiro.jpg`,
+publicada no EAD para a 2ª iteração), que substituiu a aproximação feita a partir
+do manual escaneado. O mapa tem 34 paradas: em cada região, 9 simples (3 no anel
+de cada cidade) e 2 duplas de conselheiro, mais Karakorum, ligado a 4 rotas.
+Tem também 12 províncias, 4 de cada tributo. Cada uma das 4 cabeças do Khan fica
+numa província e aponta para ela e para 2 vizinhas. A posição de cada parada na
+imagem está em `view.CoordenadasMapa`.
 
 ## Como rodar os testes sem Eclipse
 
@@ -118,7 +118,7 @@ Esta contribuição acrescenta `Partida`, `Turno`, `Fase`, `Movimento` e os test
 
 `ComponentesPartida` e `EfeitosColuna` ligam a partida à implementação da parte 2, `ComponentesKhan`. Os métodos padrão continuam disponíveis para testar isoladamente as partes 1 e 3. A integração acrescenta preparação dos componentes e seleção do tipo de tesouro nos ataques, preservando as assinaturas anteriores.
 
-O construtor simples de `Partida` mantém o subconjunto das partes 1 e 3. Ao fornecer `ComponentesKhan`, a partida também usa cartas, tesouros, melhorias, entregas, bônus, influência regional e desempates finais. As limitações do mapa descritas acima continuam válidas; a configuração física das melhorias por cor e dos conselheiros deve ser fornecida explicitamente.
+O construtor simples de `Partida` mantém o subconjunto das partes 1 e 3. Ao fornecer `ComponentesKhan`, a partida também usa cartas, tesouros, melhorias, entregas, bônus, influência regional e desempates finais. A configuração física das melhorias por cor e dos conselheiros deve ser fornecida explicitamente.
 
 Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para os contratos, consultas e escolhas de movimento, e [docs/testes-parte3.md](docs/testes-parte3.md) para os 71 testes dessa parte.
 
