@@ -64,7 +64,7 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 	private static final int BORDA = 6;
 
 	/** Área de melhorias na imagem: o clique em qualquer ponto dela leva o Khan para lá. */
-	private static final int[] AREA_MELHORIAS = { 40, 2700, 1480, 2870 };
+	private static final int[] RETANGULO_MELHORIAS = { 40, 2700, 1480, 2870 };
 
 	private final BufferedImage tabuleiro;
 	/** Cópia da imagem já na escala da tela, refeita só quando o painel muda de tamanho. */
@@ -390,9 +390,9 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 			if (!m.isKhanPendente()) {
 				return null;
 			}
-			if (x >= AREA_MELHORIAS[0] && y >= AREA_MELHORIAS[1] && x <= AREA_MELHORIAS[2]
-					&& y <= AREA_MELHORIAS[3]) {
-				return CoordenadasMapa.AREA_MELHORIAS;
+			if (x >= RETANGULO_MELHORIAS[0] && y >= RETANGULO_MELHORIAS[1] && x <= RETANGULO_MELHORIAS[2]
+					&& y <= RETANGULO_MELHORIAS[3]) {
+				return ModelAPI.AREA_MELHORIAS;
 			}
 			for (String nome : CoordenadasMapa.getLocaisDoKhan()) {
 				Point p = CoordenadasMapa.doLocalDoKhan(nome);
