@@ -1,6 +1,7 @@
 package view;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,11 +27,21 @@ public final class CoordenadasMapa {
 	/** Raio aproximado do círculo de uma parada simples na imagem. */
 	public static final int RAIO_PARADA = 55;
 
+	/** Distância máxima entre o clique e o centro de um círculo de parada. */
+	public static final int RAIO_CLIQUE = 70;
+
+	public static final String KARAKORUM = "Karakorum";
+
+	/** Karakorum é o quadro inteiro do centro do mapa, e não um círculo. */
+	private static final Rectangle QUADRO_KARAKORUM = new Rectangle(1195, 1040, 500, 500);
+
 	private static final Map<String, Point> PARADAS = new HashMap<>();
+	/** Centros dos dois círculos de cada parada dupla; em PARADAS fica o ponto entre eles. */
+	private static final Map<String, Point[]> CIRCULOS_DAS_DUPLAS = new HashMap<>();
 	private static final Map<String, Point> LOCAIS_DO_KHAN = new HashMap<>();
 
 	static {
-		PARADAS.put("Karakorum", new Point(1445, 1290));
+		PARADAS.put(KARAKORUM, new Point(1445, 1290));
 
 		// Rússia
 		PARADAS.put("Kiev Nordeste", new Point(490, 255));
@@ -71,6 +82,14 @@ public final class CoordenadasMapa {
 		PARADAS.put("Conselheiro Leste", new Point(2556, 1552));
 		PARADAS.put("Conselheiro Sul", new Point(1835, 2222));
 
+		// Os dois círculos de cada parada dupla
+		dupla("Conselheiro Norte", 850, 170, 930, 250);
+		dupla("Conselheiro Nordeste", 2180, 500, 2290, 500);
+		dupla("Conselheiro Oeste", 468, 845, 455, 945);
+		dupla("Conselheiro Sudoeste", 670, 1880, 785, 1890);
+		dupla("Conselheiro Leste", 2556, 1500, 2556, 1605);
+		dupla("Conselheiro Sul", 1780, 2215, 1893, 2228);
+
 		// Cabeças do Khan e o ícone do Khan na área de melhorias
 		LOCAIS_DO_KHAN.put("Khan do Noroeste", new Point(622, 622));
 		LOCAIS_DO_KHAN.put("Khan do Nordeste", new Point(1743, 902));
@@ -82,9 +101,31 @@ public final class CoordenadasMapa {
 	private CoordenadasMapa() {
 	}
 
+	private static void dupla(String nome, int x1, int y1, int x2, int y2) {
+		CIRCULOS_DAS_DUPLAS.put(nome, new Point[] { new Point(x1, y1), new Point(x2, y2) });
+	}
+
 	/** Centro da parada na imagem; null se o nome não for de uma parada. */
 	public static Point daParada(String nome) {
 		return PARADAS.get(nome);
+	}
+
+	/**
+	 * Centros dos círculos desenhados para a parada: dois numa parada dupla, um
+	 * nas demais. Vazio se o nome não for de uma parada.
+	 */
+	public static Point[] circulosDaParada(String nome) {
+		Point[] dupla = CIRCULOS_DAS_DUPLAS.get(nome);
+		if (dupla != null) {
+			return dupla.clone();
+		}
+		Point p = PARADAS.get(nome);
+		return p == null ? new Point[0] : new Point[] { p };
+	}
+
+	/** Indica se o ponto da imagem cai no quadro de Karakorum. */
+	public static boolean noQuadroDeKarakorum(int x, int y) {
+		return QUADRO_KARAKORUM.contains(x, y);
 	}
 
 	/** Posição do Khan na imagem; null se o nome não for um lugar do Khan. */
