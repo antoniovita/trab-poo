@@ -17,6 +17,8 @@ import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,19 +51,27 @@ import model.ObservadorIF;
  */
 public class PainelTabuleiro extends JPanel implements ObservadorIF {
 
+	private static final long serialVersionUID = 1L;
+
 	/** Tamanho sugerido; junto com o PainelTurno, cabe no limite de 1400 x 1050. */
 	public static final int LARGURA = 940;
 	public static final int ALTURA = 945;
 
 	private static final String ARQUIVO_TABULEIRO = "imagens" + File.separator + "tabuleiro.jpg";
 
-	/** Medidas em pixels da imagem original; são convertidas para a escala da tela. */
-	private static final int RAIO_CLIQUE = 70;
+	/**
+	 * Medidas em pixels da imagem original; são convertidas para a escala da
+	 * tela. O peão fica em pé no centro da parada: a metade de baixo da parada
+	 * continua visível e a cabeça sobra acima dela, onde o clique escolhe o peão.
+	 */
 	private static final int ALTURA_PEAO = 120;
+	private static final int ALTURA_CABECA = 50;
 	private static final int LARGURA_PEAO = 80;
 	private static final int ESPACO_ENTRE_PEOES = 90;
 	private static final int RAIO_KHAN = 60;
-	private static final int BORDA = 6;
+
+	/** Espessura, em pixels da tela, da borda na cor do jogador da vez. */
+	private static final int BORDA = 12;
 
 	/** Área de melhorias na imagem: o clique em qualquer ponto dela leva o Khan para lá. */
 	private static final int[] RETANGULO_MELHORIAS = { 40, 2700, 1480, 2870 };
@@ -146,22 +156,23 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 		g2.drawRect(BORDA / 2, BORDA / 2, getWidth() - BORDA, getHeight() - BORDA);
 	}
 
-	/** Anel na cor do jogador da vez em cada parada onde o peão ativo pode terminar. */
+	/**
+	 * Anel na cor do jogador da vez em cada parada onde o peão ativo pode
+	 * terminar (nas duplas, um anel em cada círculo).
+	 */
 	private void desenharDestinos(Graphics2D g2, ModelAPI m) {
 		Color cor = CoresJogador.doJogador(m.getCorJogador(m.getJogadorDaVez()));
 		int raio = tela(CoordenadasMapa.RAIO_PARADA + 8);
 		for (String nome : m.getDestinosPossiveis()) {
-			Point p = CoordenadasMapa.daParada(nome);
-			if (p == null) {
-				continue;
+			for (Point p : CoordenadasMapa.circulosDaParada(nome)) {
+				int x = telaX(p.x);
+				int y = telaY(p.y);
+				g2.setColor(new Color(255, 255, 255, 110));
+				g2.fillOval(x - raio, y - raio, 2 * raio, 2 * raio);
+				g2.setStroke(new BasicStroke(3f));
+				g2.setColor(cor);
+				g2.drawOval(x - raio, y - raio, 2 * raio, 2 * raio);
 			}
-			int x = telaX(p.x);
-			int y = telaY(p.y);
-			g2.setColor(new Color(255, 255, 255, 110));
-			g2.fillOval(x - raio, y - raio, 2 * raio, 2 * raio);
-			g2.setStroke(new BasicStroke(3f));
-			g2.setColor(cor);
-			g2.drawOval(x - raio, y - raio, 2 * raio, 2 * raio);
 		}
 	}
 
@@ -219,7 +230,7 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 	/** Peão no formato tradicional (cabeça e corpo), com halo branco se for o que age. */
 	private void desenharPeao(Graphics2D g2, PeaoNaTela peao, Color cor, boolean destacado) {
 		double x = telaX(peao.x);
-		double base = telaY(peao.y) + tela(ALTURA_PEAO) / 2.0;
+		double base = telaY(peao.y);
 		double altura = tela(ALTURA_PEAO);
 		double largura = tela(LARGURA_PEAO);
 		double raioCabeca = largura * 0.3;
@@ -262,7 +273,10 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 
 	// ============================================================ posições
 
-	/** Um peão desenhado: de quem é, qual é (0 ou 1) e onde fica na imagem original. */
+	/**
+	 * Um peão desenhado: de quem é, qual é (0 ou 1) e onde fica a base dele na
+	 * imagem original.
+	 */
 	private static final class PeaoNaTela {
 		final int jogador;
 		final int peao;
@@ -328,11 +342,40 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 
 	private static BufferedImage carregarImagem(String arquivo) {
 		try {
-			return ImageIO.read(new File(arquivo));
+			return ImageIO.read(localizar(arquivo));
 		} catch (IOException e) {
 			System.err.println("Não foi possível ler " + arquivo + ": " + e.getMessage());
 			return null;
 		}
+	}
+
+	/**
+	 * Procura o arquivo a partir do diretório de trabalho, que no Eclipse é a
+	 * raiz do projeto. Se a configuração de execução usar outro diretório,
+	 * procura a partir da pasta das classes compiladas (bin/), subindo até a
+	 * raiz do projeto.
+	 */
+	private static File localizar(String arquivo) {
+		File noDiretorioDeTrabalho = new File(arquivo);
+		if (noDiretorioDeTrabalho.isFile()) {
+			return noDiretorioDeTrabalho;
+		}
+		CodeSource codigo = PainelTabuleiro.class.getProtectionDomain().getCodeSource();
+		if (codigo != null) {
+			try {
+				File pasta = new File(codigo.getLocation().toURI());
+				for (int nivel = 0; nivel < 3 && pasta != null; nivel++) {
+					File candidato = new File(pasta, arquivo);
+					if (candidato.isFile()) {
+						return candidato;
+					}
+					pasta = pasta.getParentFile();
+				}
+			} catch (URISyntaxException e) {
+				// fica com o caminho relativo ao diretório de trabalho
+			}
+		}
+		return noDiretorioDeTrabalho;
 	}
 
 	// ============================================================ clique
@@ -341,22 +384,34 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 	 * Trata o clique no tabuleiro (cap. 12: classe interna que estende
 	 * MouseAdapter). A ordem de teste é: trocar o peão de Altani, mover o Khan
 	 * e, por último, mover o peão para a parada mais próxima do clique.
+	 *
+	 * O outro peão de Altani pode estar numa parada para onde o peão ativo pode
+	 * ir. Por isso o clique na cabeça dele sempre troca o peão que age, e o
+	 * clique no corpo só troca se a parada embaixo não for um destino possível;
+	 * se for, o peão ativo vai para lá.
 	 */
 	private class CliqueNoTabuleiro extends MouseAdapter {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			ModelAPI m = ModelAPI.getInstance();
+			atualizarEscala();
 			if (!m.temPartida() || m.isPartidaEncerrada() || escala <= 0) {
 				return;
 			}
 			int x = (int) Math.round((e.getX() - origemX) / escala);
 			int y = (int) Math.round((e.getY() - origemY) / escala);
 			Controlador c = Controlador.getInstance();
+			String parada = paradaClicada(x, y);
 
-			int peao = peaoClicado(m, x, y);
-			if (peao >= 0) {
-				c.escolherPeao(peao);
+			int naCabeca = peaoClicado(m, x, y, ALTURA_CABECA);
+			if (naCabeca >= 0) {
+				c.escolherPeao(naCabeca);
+				return;
+			}
+			int noCorpo = peaoClicado(m, x, y, ALTURA_PEAO);
+			if (noCorpo >= 0 && (parada == null || !m.podeMoverPara(parada))) {
+				c.escolherPeao(noCorpo);
 				return;
 			}
 			String khan = localDoKhanClicado(m, x, y);
@@ -364,21 +419,25 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 				c.moverKhan(khan);
 				return;
 			}
-			String parada = paradaClicada(x, y);
 			if (parada != null) {
 				c.paradaClicada(parada);
 			}
 		}
 
-		/** Outro peão do jogador da vez, quando ele ainda pode trocar (Altani). */
-		private int peaoClicado(ModelAPI m, int x, int y) {
+		/**
+		 * Outro peão do jogador da vez, quando ele ainda pode trocar (Altani),
+		 * se o clique cair nos primeiros pixels do peão, contados do topo: a
+		 * cabeça (ALTURA_CABECA) ou o peão inteiro (ALTURA_PEAO).
+		 */
+		private int peaoClicado(ModelAPI m, int x, int y, int alturaDoTopo) {
 			if (!m.podeEscolherPeao()) {
 				return -1;
 			}
 			int vez = m.getJogadorDaVez();
 			for (PeaoNaTela peao : posicionarPeoes(m)) {
+				int topo = peao.y - ALTURA_PEAO;
 				if (peao.jogador == vez && peao.peao != m.getPeaoAtivo()
-						&& Math.abs(x - peao.x) <= LARGURA_PEAO / 2 && Math.abs(y - peao.y) <= ALTURA_PEAO / 2) {
+						&& Math.abs(x - peao.x) <= LARGURA_PEAO / 2 && y >= topo && y <= topo + alturaDoTopo) {
 					return peao.peao;
 				}
 			}
@@ -403,16 +462,23 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 			return null;
 		}
 
-		/** Parada mais próxima do clique, dentro do raio de tolerância. */
+		/**
+		 * Parada mais próxima do clique, dentro do raio de tolerância de algum
+		 * dos seus círculos (as duplas têm dois). Karakorum vale o quadro todo.
+		 */
 		private String paradaClicada(int x, int y) {
+			if (CoordenadasMapa.noQuadroDeKarakorum(x, y)) {
+				return CoordenadasMapa.KARAKORUM;
+			}
 			String maisProxima = null;
-			double menor = RAIO_CLIQUE;
+			double menor = CoordenadasMapa.RAIO_CLIQUE;
 			for (String nome : CoordenadasMapa.getParadas()) {
-				Point p = CoordenadasMapa.daParada(nome);
-				double d = distancia(x, y, p.x, p.y);
-				if (d <= menor) {
-					menor = d;
-					maisProxima = nome;
+				for (Point p : CoordenadasMapa.circulosDaParada(nome)) {
+					double d = distancia(x, y, p.x, p.y);
+					if (d <= menor) {
+						menor = d;
+						maisProxima = nome;
+					}
 				}
 			}
 			return maisProxima;
