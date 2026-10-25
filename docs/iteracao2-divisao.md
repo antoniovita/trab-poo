@@ -61,7 +61,12 @@ não usa nada da outra além de um construtor (`new PainelTabuleiro()`).
   cores de `CoresJogador`, que também servem para os destaques.
 - `CoordenadasMapa`: um `Map<String, Point>` com a posição, sobre a imagem, de
   cada parada (`ModelAPI.getParadas()`) e de cada local do Khan
-  (`getLocaisDoKhan()`: as províncias do Khan e `ModelAPI.AREA_MELHORIAS`).
+  (`getLocaisDoKhan()`: as províncias do Khan e `ModelAPI.AREA_MELHORIAS`). As
+  paradas duplas têm também os centros dos seus dois círculos, e Karakorum
+  responde ao clique no quadro inteiro do centro do mapa.
+- A imagem é lida de `imagens/tabuleiro.jpg` a partir do diretório de trabalho,
+  que no Eclipse é a raiz do projeto. Se a configuração de execução usar outro
+  diretório, ela é procurada a partir da pasta `bin/`, subindo até a raiz.
 - O `MapaOficial` foi corrigido nesta parte para bater com o `tabuleiro.jpg`: 34
   paradas (11 por região, com 2 duplas, mais Karakorum) e 12 províncias. Os testes do
   `ModelAPITest` passaram a usar os nomes do mapa novo.
@@ -69,7 +74,10 @@ não usa nada da outra além de um construtor (`new PainelTabuleiro()`).
   (`getPeaoAtivo`) e, quando `isKhanPendente()`, os destinos do Khan (`getDestinosDoKhan`).
 - Um `MouseListener` (classe nomeada, sem lambda) trata o clique:
   - num local do Khan, com o Khan pendente: `Controlador.getInstance().moverKhan(local)`;
-  - no outro peão da Altani, enquanto `podeEscolherPeao()`: `Controlador.getInstance().escolherPeao(i)`;
+  - no outro peão da Altani, enquanto `podeEscolherPeao()`: `Controlador.getInstance().escolherPeao(i)`.
+    O peão fica em pé sobre a parada. O clique na cabeça dele sempre troca o peão;
+    o clique no corpo só troca se a parada embaixo não for destino do peão ativo
+    (se for, o peão ativo vai para lá);
   - numa parada: `Controlador.getInstance().paradaClicada(nome)`;
   - se a ação for recusada, não fazer nada.
 - `notify(ObservadoIF o)`: só chama `repaint()`. O `paintComponent` lê o estado
